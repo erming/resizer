@@ -2,8 +2,14 @@ const express = require("express");
 const mkdirp = require("mkdirp");
 const sharp = require("sharp");
 const request = require("request");
+const path = require("path");
 const fs = require("fs-extra");
 const config = require("./config/config");
+
+const {
+  host,
+  port
+} = config.server;
 
 const app = express();
 const quality = 98;
@@ -25,15 +31,15 @@ app.get("*", async (req, res) => {
     return fetch(req).pipe(res);
   }
 
-  let path = `${__dirname}/public${req.path}-${width}`;
+  let filePath = path.join(__dirname, "public", `${req.path}-${width}`);
   let ext = req.path.split(".").pop();
 
   if (!ext) {
     return res.sendStats(500);
   }
 
-  if (await fs.exists(path)) {
-    return (await fs.createReadStream(path)).pipe(res);
+  if (await fs.exists(filePath)) {
+    return (await fs.createReadStream(filePath)).pipe(res);
   }
 
   width = parseInt(width);
@@ -43,9 +49,9 @@ app.get("*", async (req, res) => {
     .toFormat(ext, { quality });
   
   file.toBuffer(async (_, buffer) => {
-    console.log(path);
-    mkdirp(`${__dirname}/public`).then(() => {
-      fs.writeFile(path, buffer);
+    let folder = path.join(path.dirname(filePath));
+    mkdirp(folder).then(() => {
+      fs.writeFile(filePath, buffer);
     });
   });
 
@@ -57,4 +63,14 @@ app.get("*", async (req, res) => {
   });
 });
 
-app.listen(config.port);
+app.listen(port, () => {
+  console.log("");
+  console.log("resizer@1.0.0");
+  console.log("");
+  console.log("host  " + host);
+  console.log("port  " + port);
+  console.log("");
+  console.log("Server started!");
+  console.log("Press ctrl-c to stop");
+  console.log("");
+});
