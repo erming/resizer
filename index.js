@@ -52,6 +52,7 @@ app.get("*", async (req, res) => {
     let folder = path.join(path.dirname(filePath));
     mkdirp(folder).then(() => {
       fs.writeFile(filePath, buffer);
+      console.log(filePath);
     });
   });
 
